@@ -1,224 +1,224 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+    <!DOCTYPE html>
+    <html lang="zh-TW">
 
-<head>
-    <meta charset="UTF-8">
-    <title>NE555 無穩態電路計算</title>
-    <style>
-        /* 保持原有的 CSS 樣式 */
-        body {
-            font-family: "Microsoft JhengHei", Arial, sans-serif;
-            background-color: #f4f4f9;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 850px;
-            margin: auto;
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        h2 {
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-        }
-
-        .quiz-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            background-color: #fafafa;
-        }
-
-        .stats {
-            font-weight: bold;
-            color: #e91e63;
-            margin-bottom: 8px;
-        }
-
-        .question {
-            font-weight: bold;
-            color: #795548;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
-
-        .answer-area {
-            color: #3f51b5;
-            font-size: 1.1em;
-        }
-
-        input[type="number"] {
-            padding: 8px;
-            width: 110px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 8px 15px;
-            margin-left: 8px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-
-        .btn-check {
-            background-color: #f8bbd0;
-            color: #ad1457;
-            font-weight: bold;
-        }
-
-        .btn-random {
-            background-color: #c8e6c9;
-            color: #2e7d32;
-            font-weight: bold;
-        }
-
-        .result-msg {
-            margin-left: 15px;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 4px;
-        }
-
-        .correct {
-            color: #2e7d32;
-            background-color: #e8f5e9;
-        }
-
-        .wrong {
-            color: #c62828;
-            background-color: #ffebee;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="container">
-        <h2>NE555 無穩態電路計算</h2>
-        <hr>
-        <div id="quiz-container"></div>
-    </div>
-
-    <script>
-        const quizTypes = [
-            { id: 1, title: "題型一：設計 RA 電阻", unit: "KΩ", range: "(1K~100K)" },
-            { id: 2, title: "題型二：設計 RB 電阻", unit: "KΩ", range: "(1K~100K)" },
-            { id: 3, title: "題型三：求 C (電容)", unit: "μF", range: "(1μF~100μF)" },
-            { id: 4, title: "題型四：求 f (頻率)", unit: "Hz", range: "(1Hz~20Hz)" }
-        ];
-
-        let scores = { 1: { c: 0, w: 0, target: 0 }, 2: { c: 0, w: 0, target: 0 }, 3: { c: 0, w: 0, target: 0 }, 4: { c: 0, w: 0, target: 0 } };
-
-        function init() {
-            const container = document.getElementById('quiz-container');
-            quizTypes.forEach(type => {
-                container.innerHTML += `
-                <div class="quiz-section">
-                    <div class="stats" id="stats${type.id}">答對：0 題，答錯：0 題</div>
-                    <div class="question" id="text${type.id}">載入中...</div>
-                    <div class="answer-area">
-                        答案: ${type.id == 4 ? 'f' : (type.id == 1 ? 'RA' : type.id == 2 ? 'RB' : 'C')} = 
-                        <input type="number" id="input${type.id}"> ${type.unit} ${type.range}
-                        <button class="btn-random" onclick="generateQ(${type.id})">隨機出題</button>
-                        <button class="btn-check" onclick="checkQ(${type.id})">檢查答案</button>
-                        <span id="res${type.id}" class="result-msg"></span>
-                    </div>
-                </div>`;
-                generateQ(type.id);
-            }); F
-        }
-
-        function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
-
-        function generateQ(id) {
-            document.getElementById(`res${id}`).innerText = '';
-            document.getElementById(`input${id}`).value = '';
-
-            let ra, rb, c, f;
-            const k = 0.693;
-
-            // 核心邏輯：先決定目標「整數」答案，再反推題目數值
-            switch (id) {
-                case 1: // 求 RA (1-100)
-                    let targetRA = getRandom(1, 100);
-                    rb = getRandom(1, 20);
-                    c = getRandom(10, 50);
-                    // 反推頻率 f (四捨五入到小數，讓 RA 維持整數答案)
-                    f = 1000 / (k * (targetRA + 2 * rb) * c);
-                    f = parseFloat(f.toFixed(2));
-                    scores[1].target = targetRA;
-                    document.getElementById('text1').innerText = `1. 設計RA電阻，RB = ${rb} KΩ，C = ${c}.0 μF，CLK輸出 ${f} Hz 的方波`;
-                    break;
-                case 2: // 求 RB (1-100)
-                    let targetRB = getRandom(1, 100);
-                    ra = getRandom(1, 50);
-                    c = getRandom(5, 20);
-                    f = 1000 / (k * (ra + 2 * targetRB) * c);
-                    f = parseFloat(f.toFixed(2));
-                    scores[2].target = targetRB;
-                    document.getElementById('text2').innerText = `2. 設計RB電阻，RA = ${ra} KΩ，C = ${c}.0 μF，CLK輸出 ${f} Hz 的方波`;
-                    break;
-                case 3: // 求 C (1-100)
-                    let targetC = getRandom(1, 100);
-                    ra = getRandom(1, 20);
-                    rb = getRandom(1, 20);
-                    f = 1000 / (k * (ra + 2 * rb) * targetC);
-                    f = parseFloat(f.toFixed(2));
-                    scores[3].target = targetC;
-                    document.getElementById('text3').innerText = `3. RA = ${ra} KΩ，RB = ${rb} KΩ，CLK為 ${f} Hz，求C(電容)=?`;
-                    break;
-                case 4: // 求 f (1-20)
-                    let targetF = getRandom(1, 20);
-                    ra = getRandom(1, 10);
-                    rb = getRandom(1, 10);
-                    // 反推需要的電容 C
-                    c = 1000 / (k * (ra + 2 * rb) * targetF);
-                    c = parseFloat(c.toFixed(1));
-                    scores[4].target = targetF;
-                    document.getElementById('text4').innerText = `4. RA = ${ra} KΩ，RB = ${rb} KΩ，C = ${c} μF，求f(頻率)=?`;
-                    break;
-            }
-        }
-
-        function checkQ(id) {
-            const inputField = document.getElementById(`input${id}`);
-            const userVal = parseInt(inputField.value);
-            // 關鍵修改：將目標答案四捨五入到最接近的整數
-            const targetVal = Math.round(scores[id].target);
-            const resSpan = document.getElementById(`res${id}`);
-
-            if (isNaN(userVal)) return;
-
-            // 判斷對錯（比對整數）
-            if (userVal === targetVal) {
-                resSpan.innerText = "● 答對了！";
-                resSpan.className = "result-msg correct";
-                scores[id].c++;
-            } else {
-                resSpan.innerText = `X 錯誤 (正確答案是: ${targetVal})`;
-                resSpan.className = "result-msg wrong";
-                scores[id].w++;
+    <head>
+        <meta charset="UTF-8">
+        <title>NE555 無穩態電路計算</title>
+        <style>
+            /* 保持原有的 CSS 樣式 */
+            body {
+                font-family: "Microsoft JhengHei", Arial, sans-serif;
+                background-color: #f4f4f9;
+                padding: 20px;
             }
 
-            // 更新統計
-            document.getElementById(`stats${id}`).innerText = `答對：${scores[id].c} 題，答錯：${scores[id].w} 題`;
+            .container {
+                max-width: 850px;
+                margin: auto;
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
 
-            // 清除輸入框
-            inputField.value = '';
-        }
+            h2 {
+                color: #2c3e50;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 10px;
+            }
 
-        window.onload = init;
-    </script>
-</body>
+            .quiz-section {
+                margin-bottom: 25px;
+                padding: 20px;
+                border-radius: 10px;
+                border: 1px solid #e0e0e0;
+                background-color: #fafafa;
+            }
 
-</html>
+            .stats {
+                font-weight: bold;
+                color: #e91e63;
+                margin-bottom: 8px;
+            }
+
+            .question {
+                font-weight: bold;
+                color: #795548;
+                margin-bottom: 12px;
+                font-size: 1.1em;
+                line-height: 1.5;
+            }
+
+            .answer-area {
+                color: #3f51b5;
+                font-size: 1.1em;
+            }
+
+            input[type="number"] {
+                padding: 8px;
+                width: 110px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+
+            button {
+                padding: 8px 15px;
+                margin-left: 8px;
+                cursor: pointer;
+                border: none;
+                border-radius: 5px;
+                transition: 0.3s;
+            }
+
+            .btn-check {
+                background-color: #f8bbd0;
+                color: #ad1457;
+                font-weight: bold;
+            }
+
+            .btn-random {
+                background-color: #c8e6c9;
+                color: #2e7d32;
+                font-weight: bold;
+            }
+
+            .result-msg {
+                margin-left: 15px;
+                font-weight: bold;
+                padding: 4px 10px;
+                border-radius: 4px;
+            }
+
+            .correct {
+                color: #2e7d32;
+                background-color: #e8f5e9;
+            }
+
+            .wrong {
+                color: #c62828;
+                background-color: #ffebee;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="container">
+            <h2>NE555 無穩態電路計算</h2>
+            <hr>
+            <div id="quiz-container"></div>
+        </div>
+
+        <script>
+            const quizTypes = [
+                { id: 1, title: "題型一：設計 RA 電阻", unit: "KΩ", range: "(1K~100K)" },
+                { id: 2, title: "題型二：設計 RB 電阻", unit: "KΩ", range: "(1K~100K)" },
+                { id: 3, title: "題型三：求 C (電容)", unit: "μF", range: "(1μF~100μF)" },
+                { id: 4, title: "題型四：求 f (頻率)", unit: "Hz", range: "(1Hz~20Hz)" }
+            ];
+
+            let scores = { 1: { c: 0, w: 0, target: 0 }, 2: { c: 0, w: 0, target: 0 }, 3: { c: 0, w: 0, target: 0 }, 4: { c: 0, w: 0, target: 0 } };
+
+            function init() {
+                const container = document.getElementById('quiz-container');
+                quizTypes.forEach(type => {
+                    container.innerHTML += `
+                    <div class="quiz-section">
+                        <div class="stats" id="stats${type.id}">答對：0 題，答錯：0 題</div>
+                        <div class="question" id="text${type.id}">載入中...</div>
+                        <div class="answer-area">
+                            答案: ${type.id == 4 ? 'f' : (type.id == 1 ? 'RA' : type.id == 2 ? 'RB' : 'C')} = 
+                            <input type="number" id="input${type.id}"> ${type.unit} ${type.range}
+                            <button class="btn-random" onclick="generateQ(${type.id})">隨機出題</button>
+                            <button class="btn-check" onclick="checkQ(${type.id})">檢查答案</button>
+                            <span id="res${type.id}" class="result-msg"></span>
+                        </div>
+                    </div>`;
+                    generateQ(type.id);
+                }); F
+            }
+
+            function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+
+            function generateQ(id) {
+                document.getElementById(`res${id}`).innerText = '';
+                document.getElementById(`input${id}`).value = '';
+
+                let ra, rb, c, f;
+                const k = 0.693;
+
+                switch (id) {
+                    case 1: // 求 RA，給定整數 f
+                        f = getRandom(1, 20); // 確保頻率是正整數
+                        rb = getRandom(1, 10);
+                        c = getRandom(10, 50);
+                        // 公式反推: RA = 1000 / (f * k * c) - 2 * rb
+                        let calcRA = (1000 / (f * k * c)) - (2 * rb);
+                        scores[1].target = Math.round(calcRA); // 答案四捨五入
+                        document.getElementById('text1').innerText = `1. 設計RA電阻，RB = ${rb} KΩ，C = ${c}.0 μF，CLK輸出 ${f} Hz 的方波`;
+                        break;
+
+                    case 2: // 求 RB，給定整數 f
+                        f = getRandom(1, 20); // 確保頻率是正整數
+                        ra = getRandom(1, 20);
+                        c = getRandom(10, 50);
+                        // 公式反推: RB = (1000 / (f * k * c) - ra) / 2
+                        let calcRB = ((1000 / (f * k * c)) - ra) / 2;
+                        scores[2].target = Math.round(calcRB); // 答案四捨五入
+                        document.getElementById('text2').innerText = `2. 設計RB電阻，RA = ${ra} KΩ，C = ${c}.0 μF，CLK輸出 ${f} Hz 的方波`;
+                        break;
+
+                    case 3: // 求 C，給定整數 f
+                        f = getRandom(1, 20); // 確保頻率是正整數
+                        ra = getRandom(1, 20);
+                        rb = getRandom(1, 10);
+                        // 公式反推: C = 1000 / (f * k * (ra + 2 * rb))
+                        let calcC = 1000 / (f * k * (ra + 2 * rb));
+                        scores[3].target = Math.round(calcC); // 答案四捨五入
+                        document.getElementById('text3').innerText = `3. RA = ${ra} KΩ，RB = ${rb} KΩ，CLK為 ${f} Hz，求C(電容)=?`;
+                        break;
+
+                    case 4: // 求 f (頻率本身就是目標，且必須是整數)
+                        ra = getRandom(1, 15);
+                        rb = getRandom(1, 10);
+                        c = getRandom(10, 80);
+                        // 直接計算頻率並四捨五入
+                        let calcF = 1000 / (k * (ra + 2 * rb) * c);
+                        scores[4].target = Math.round(calcF); // 答案四捨五入
+                        document.getElementById('text4').innerText = `4. RA = ${ra} KΩ，RB = ${rb} KΩ，C = ${c}.0 μF，求f(頻率)約為多少? (請四捨五入至整數)`;
+                        break;
+                }
+            }
+
+            function checkQ(id) {
+                const inputField = document.getElementById(`input${id}`);
+                const userVal = parseInt(inputField.value);
+                // 關鍵修改：將目標答案四捨五入到最接近的整數
+                const targetVal = Math.round(scores[id].target);
+                const resSpan = document.getElementById(`res${id}`);
+
+                if (isNaN(userVal)) return;
+
+                // 判斷對錯（比對整數）
+                if (userVal === targetVal) {
+                    resSpan.innerText = "● 答對了！";
+                    resSpan.className = "result-msg correct";
+                    scores[id].c++;
+                } else {
+                    resSpan.innerText = `X 錯誤 (正確答案是: ${targetVal})`;
+                    resSpan.className = "result-msg wrong";
+                    scores[id].w++;
+                }
+
+                // 更新統計
+                document.getElementById(`stats${id}`).innerText = `答對：${scores[id].c} 題，答錯：${scores[id].w} 題`;
+
+                // 清除輸入框
+                inputField.value = '';
+            }
+
+            window.onload = init;
+        </script>
+    </body>
+
+    </html>
